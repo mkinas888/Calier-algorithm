@@ -6,8 +6,7 @@ using namespace std;
 
 class Task {
 public:
-    int r, p, q;
-    int C = r+p+q;
+    int r, p, q, C;
 
     Task & operator = (const Task& task) {
         this->r = task.r;
@@ -43,6 +42,9 @@ void showpq(priority_queue <Task, vector<Task>, compareR> pq)
     cout << endl; 
 } 
 
+Task piTable[23];
+
+
 int schrageMethod(int n, Task taskTable[], Task piTable[]) {
     Task e;
     int t=0, k=0, Cmax=0;
@@ -60,7 +62,6 @@ int schrageMethod(int n, Task taskTable[], Task piTable[]) {
         if(G.empty()) {
             t = N.top().r;
             while(!(N.empty()) && N.top().r <= t) {
-            cout << N.top().r << endl;
             e = N.top();
             G.push(e);
             N.pop();
@@ -71,13 +72,58 @@ int schrageMethod(int n, Task taskTable[], Task piTable[]) {
         piTable[k] = e;
         t = t + e.p;
         Cmax = max(Cmax, t + e.q);
+        piTable[k].C = t;
         k = k+1;
     }
     return Cmax;
 }
 
+int preSchrageMethod(int n, Task taskTable[], Task piTable[]) {
+    Task e, l = piTable[0];
+    int t =0, Cmax=0, q=1000000;
+    priority_queue<Task, vector<Task>, compareR> N;
+    priority_queue<Task, vector<Task>, compareQ> G;
+    for(int i=0;i<n;i++) {
+        N.push(taskTable[i]);
+    }
+    while(!(G.empty()) || !(N.empty())) {
+        while(!(N.empty()) && N.top().r <= t) {
+            e = N.top();
+            G.push(e);
+            N.pop();
+            if(e.q > l.q) {
+                l.p = t - e.r;
+                t = e.r;
+            }
+            if(l.p > 0) {
+                G.push(l);
+            }
+        }
+        if(G.empty()) {
+            t = N.top().r;
+            while(!(N.empty()) && N.top().r <= t) {
+                e = N.top();
+                G.push(e);
+                N.pop();
+                if(e.q > l.q) {
+                    l.p = t - e.r;
+                    t = e.r;
+                }
+                if(l.p > 0) {
+                    G.push(l);
+                }
+            }
+        }
+        e = G.top();
+        G.pop();
+        t = t + e.p;
+        Cmax = max(Cmax, t + e.q);
+    }
+    return Cmax;
+}
+
 int calierMethod(int n, Task taskTable[], int UB) {
-    int U, a=0, b=0, c=-1, suma;
+    int U, a=0, b=0, c=-1, suma, rprim = 1000000, pprim = 0, qprim = 1000000, LB;
     Task piTableX[n-1];
     U = schrageMethod(n, taskTable, piTable);
     if(U < UB) {
@@ -108,12 +154,29 @@ int calierMethod(int n, Task taskTable[], int UB) {
             break;
         }
     }
+    cout << a << endl << b << endl << c << endl;
     if(c == -1) {
         return U;
     }
+    for(int i = c+1; i<= b; i++) {
+        rprim = min(rprim, piTable[i].r);
+        qprim = min(qprim, piTable[i].r);
+        pprim = piTable[i].p;
+    }
+    piTable[c].r = max(piTable[c].r, rprim+pprim);
+    LB = preSchrageMethod(n, taskTable, piTable);
+    if(LB<UB) {
+        UB = calierMethod(n, taskTable, UB);
+    }
+    // odtwórz
+    piTable[c].q = max(piTable[c].q, qprim + pprim);
+    LB = preSchrageMethod(n, taskTable, piTable);
+    if(LB<UB) {
+        UB = calierMethod(n, taskTable, UB);
+    }
+    // odtwórz
+    return UB;
 }
-
-Task piTable[23];
 
 int main () {
     string s;
@@ -124,7 +187,9 @@ int main () {
     for(int i=0;i<24;i++) {
         data >> taskTable[i].r >> taskTable[i].p >> taskTable[i].q;
     }
-    calierMethod(n, taskTable, 100000);
+    UB = preSchrageMethod(n, taskTable, piTable);
+    cout << UB << endl;
+    // UB = calierMethod(n, taskTable, 1000000);
     // UB = schrageMethod(n, taskTable, piTable);
     // for(int o=0;o<24;o++){
     //     cout << piTable[o].r << " " << piTable[o].p << " " << piTable[o].q <<  endl;
