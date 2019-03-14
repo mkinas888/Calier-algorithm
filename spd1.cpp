@@ -46,8 +46,7 @@ void showpq(priority_queue <Task, vector<Task>, compareR> pq)
     cout << endl;
 }
 
-const int dataLength = 24;
-Task piTable[dataLength - 1];
+Task piTable[100];
 
 int schrageMethod(int n, Task taskTable[], Task piTable[]) {
     Task e;
@@ -227,7 +226,14 @@ int main () {
     string s;
     ifstream data;
     data.open("rpq.data.txt");
-    int n=dataLength, UB, opt, taskBig=0, id;
+    int n, UB;
+    string str;
+    while(str != "data.3") {
+        data >> str;
+    }
+    data >> str;
+    cout << str << endl;
+    n = stoi(str);
     Task taskTable[n-1];
     for(int i=0;i<n;i++) {
         data >> taskTable[i].r >> taskTable[i].p >> taskTable[i].q;
@@ -238,10 +244,6 @@ int main () {
     optimizeTasks(n, taskTable, piTable);
 	auto end = chrono::steady_clock::now();
 
-	cout << "Elapsed time in microseconds : " 
-		<< chrono::duration_cast<chrono::microseconds>(end - start).count()
-		<< " µs" << endl;
-
     for(int o=0;o<n;o++){
         cout << piTable[o].r << " " << piTable[o].p << " " << piTable[o].q << "  " << piTable[o].C << "  " << piTable[o].delay <<  endl;
     }
@@ -251,4 +253,8 @@ int main () {
     UB = countCmax(n, piTable);
     cout << endl;
     cout << UB << endl;
+
+	cout << "Elapsed time in microseconds : " 
+		<< chrono::duration_cast<chrono::microseconds>(end - start).count()
+		<< " µs" << endl;
 }
