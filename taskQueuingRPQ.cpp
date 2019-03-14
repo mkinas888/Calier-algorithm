@@ -6,9 +6,10 @@
 
 using namespace std;
 
+// IMPORTANT !!
+//Compile with -std=c++11 flag due to chrono and stoi usage
 
  // Class created to store Task parameters
-
 class Task {
 public:
     int r, p, q, C, id, delay;
@@ -55,10 +56,11 @@ void showpq(priority_queue <Task, vector<Task>, compareR> pq)
 // global table for storing optimal permutation
 Task piTable[100];
 
-/*
-*       Psuedo code used to implement both schrageMethod and preSchrageMethod taken from
-*       http://dominik.zelazny.staff.iiar.pwr.wroc.pl/materialy/Algorytm_Schrage.pdf
-*/
+/*******************************************************************************************
+*       Psuedo code used to implement both schrageMethod and preSchrageMethod taken from   *
+*       http://dominik.zelazny.staff.iiar.pwr.wroc.pl/materialy/Algorytm_Schrage.pdf       *
+*                                                                                          *     
+*******************************************************************************************/
 
 int schrageMethod(int n, Task taskTable[], Task piTable[]) {
     Task e;
@@ -143,10 +145,10 @@ int preSchrageMethod(int n, Task taskTable[], Task piTable[]) {
 
 int countCmax(int n, Task taskTable[]) {
     int t=0, Cmax=0;
-    for(int o=0;o<n;o++){
-        t += taskTable[o].p;
-        t = max(t, taskTable[o].r + taskTable[o].p);
-        Cmax = max(Cmax, t + taskTable[o].q);
+    for(int i=0;i<n;i++){
+        t += taskTable[i].p;
+        t = max(t, taskTable[i].r + taskTable[i].p);
+        Cmax = max(Cmax, t + taskTable[i].q);
     }
     return Cmax;
 }
@@ -154,10 +156,10 @@ int countCmax(int n, Task taskTable[]) {
 void countC(int n, Task taskTable[]) {
     // C parameter means when the task is taken out from machine
     int C=0;
-    for(int o=0;o<n;o++){
-        C += taskTable[o].p;
-        C = max(C, taskTable[o].r + taskTable[o].p);
-        taskTable[o].C = C;
+    for(int i=0;i<n;i++){
+        C += taskTable[i].p;
+        C = max(C, taskTable[i].r + taskTable[i].p);
+        taskTable[i].C = C;
     }
 }
 
@@ -166,10 +168,10 @@ void countDelay(int n, Task taskTable[]) {
     // after the last task is done
     countC(n, taskTable);
     int delay;
-    for(int o=0;o<n;o++){
+    for(int i=0;i<n;i++){
         // current task C plus its offset minus last task C plus its offset
-        delay = taskTable[o].C + taskTable[o].q - (taskTable[n-1].C + taskTable[n-1].q);
-        taskTable[o].delay = delay;
+        delay = taskTable[i].C + taskTable[i].q - (taskTable[n-1].C + taskTable[n-1].q);
+        taskTable[i].delay = delay;
     }
 }
 
@@ -185,10 +187,10 @@ void swapTasks(int task1Id, int task2Id, Task taskTable[]) {
 void upgrade(int n, int UB, int opt, Task taskTable[]) {
     int taskBig = 0, id;
     // find the most crucial element by its delay property
-    for(int o=0;o<n;o++){
-        if(piTable[o].delay > taskBig) {
-            taskBig = piTable[o].delay;
-            id = o;
+    for(int i=0;i<n;i++){
+        if(piTable[i].delay > taskBig) {
+            taskBig = piTable[i].delay;
+            id = i;
         }
     }
     // if third dataset
@@ -245,6 +247,7 @@ void manageZero(int n, Task taskTable[]) {
 void optimizeTasks(int n, Task taskTable[], Task piTable[]) {
     int UB, opt;
     // second dataset
+    
     if(taskTable[0].r == 0 && taskTable[0].q == 0) {
         manageZero(n, taskTable);
     } else {
@@ -258,42 +261,108 @@ void optimizeTasks(int n, Task taskTable[], Task piTable[]) {
 }
 
 int main () {
-    string s;
+     auto start = chrono::steady_clock::now();
     ifstream data;
     data.open("rpq.data.txt");
-    int n, UB;
+    int n, Cmax1, Cmax2, Cmax3, Cmax4, CmaxSum;
     string str;
+    while(str != "data.1") {
+        data >> str;
+    }
+    data >> str;
+    n = stoi(str);
+    Task taskTable1[n-1];
+    // load dataset to each taskTable
+    for(int i=0;i<n;i++) {
+        data >> taskTable1[i].r >> taskTable1[i].p >> taskTable1[i].q;
+        taskTable1[i].id = i+1;
+    }
+
+    optimizeTasks(n, taskTable1, piTable);
+    Cmax1 = countCmax(n, piTable);
+    cout << endl;
+    cout << "Dla zestawu pierwszego :" << endl << endl;
+    cout << "Cmax : " << Cmax1 << endl;
+    cout << "Optymalna kolejność uszeregowania zadań :" << endl;
+    for(int i=0;i<n;i++) {
+        cout << piTable[i].id << " ";
+    }
+    cout << endl;
+
     while(str != "data.2") {
         data >> str;
     }
     data >> str;
-    cout << str << endl;
     n = stoi(str);
-    Task taskTable[n-1];
-    // load dataset to taskTable
+    Task taskTable2[n-1];
+    // load dataset to each taskTable
     for(int i=0;i<n;i++) {
-        data >> taskTable[i].r >> taskTable[i].p >> taskTable[i].q;
-        taskTable[i].id = i+1;
-    }    
-
-    // count time and perform queuing
-    auto start = chrono::steady_clock::now();
-    optimizeTasks(n, taskTable, piTable);
-	auto end = chrono::steady_clock::now();
-
-    countDelay(n, piTable);
-
-    // display the results
-    for(int o=0;o<n;o++){
-        cout << piTable[o].r << " " << piTable[o].p << " " << piTable[o].q << "  " << piTable[o].C << "  " << piTable[o].delay <<  endl;
+        data >> taskTable2[i].r >> taskTable2[i].p >> taskTable2[i].q;
+        taskTable2[i].id = i+1;
     }
-    for(int o=0;o<n;o++){
-        cout << piTable[o].id << "  ";
-    }
-    UB = countCmax(n, piTable);
+
+    optimizeTasks(n, taskTable2, piTable);
+    Cmax2 = countCmax(n, piTable);
     cout << endl;
-    cout << UB << endl;
+    cout << "Dla zestawu drugiego :" << endl << endl;
+    cout << "Cmax : " << Cmax2 << endl;
+    cout << "Optymalna kolejność uszeregowania zadań :" << endl;
+    for(int i=0;i<n;i++) {
+        cout << piTable[i].id << " ";
+    }
+    cout << endl;
 
+    while(str != "data.3") {
+        data >> str;
+    }
+    data >> str;
+    n = stoi(str);
+    Task taskTable3[n-1];
+    // load dataset to each taskTable
+    for(int i=0;i<n;i++) {
+        data >> taskTable3[i].r >> taskTable3[i].p >> taskTable3[i].q;
+        taskTable3[i].id = i+1;
+    }
+
+    optimizeTasks(n, taskTable3, piTable);
+    Cmax3 = countCmax(n, piTable);
+    cout << endl;
+    cout << "Dla zestawu trzeciego :" << endl << endl;
+    cout << "Cmax : " << Cmax3 << endl;
+    cout << "Optymalna kolejność uszeregowania zadań :" << endl;
+    for(int i=0;i<n;i++) {
+        cout << piTable[i].id << " ";
+    }
+    cout << endl;
+
+    while(str != "data.4") {
+        data >> str;
+    }
+    data >> str;
+    n = stoi(str);
+    Task taskTable4[n-1];
+    // load dataset to each taskTable
+    for(int i=0;i<n;i++) {
+        data >> taskTable4[i].r >> taskTable4[i].p >> taskTable4[i].q;
+        taskTable4[i].id = i+1;
+    }
+
+    optimizeTasks(n, taskTable4, piTable);
+    Cmax4 = countCmax(n, piTable);
+    cout << endl;
+    cout << "Dla zestawu czwartego :" << endl << endl;
+    cout << "Cmax : " << Cmax4 << endl;
+    cout << "Optymalna kolejność uszeregowania zadań :" << endl;
+    for(int i=0;i<n;i++) {
+        cout << piTable[i].id << " ";
+    }
+    cout << endl << endl;
+
+
+    CmaxSum = Cmax1 + Cmax2 + Cmax3 + Cmax4;
+    cout << "Calkowita suma : " << CmaxSum << endl;
+
+    auto end = chrono::steady_clock::now();
 	cout << "Elapsed time in microseconds : " 
 		<< chrono::duration_cast<chrono::microseconds>(end - start).count()
 		<< " µs" << endl;
